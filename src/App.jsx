@@ -4,9 +4,9 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 
 const productSchema = z.object({
-  title: z.string().min(1, { message: "Nama masakan harus diisi" }),
-  asal: z.string().min(1, { message: "Asal masakan harus diisi" }),
-  WaktuMasak: z.coerce.number().min(1, { message: "Waktu masak harus diisi" }),
+  title: z.string().min(1,{message: "Nama masakan harus diisi"}),
+  asal: z.string().min(1,{message: "Asal masakan harus diisi"}),
+  WaktuMasak: z.coerce.number().min(1,{message: "Waktu masak harus diisi"}),
 });
 
 const App = () => {
@@ -57,7 +57,7 @@ const App = () => {
   return (
     <main className="page-shell">
       <section className="intro">
-        <p className="">MASAKAN</p>
+        <p className="">MENU MASAKAN</p>
         <h1>Daftar Masakan</h1>
       </section>
 
