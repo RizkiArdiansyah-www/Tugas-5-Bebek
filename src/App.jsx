@@ -1,122 +1,102 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import {useState, useEffect} from "react";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
 
-function App() {
-  const [count, setCount] = useState(0)
+const productSchema = z.object({
+  title: z.string().min(1, { message: "Nama masakan harus diisi" }),
+  asal: z.string().min(1, { message: "Asal masakan harus diisi" }),
+  WaktuMasak: z.coerce.number().min(1, { message: "Waktu masak harus diisi" }),
+});
+
+const App = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("https://dummyjson.com/recipes?limit=9")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data.recipes.map((recipe) => ({
+          id: recipe.id,
+          title: recipe.name,
+          asal: recipe.cuisine,
+          WaktuMasak: recipe.cookTimeMinutes,
+        })));
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Gagal mengambil data");
+        setLoading(false);
+      });
+  }, []);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(productSchema),
+  });
+
+  const onSubmit = (data) => {
+    const newTask = {
+      id: products.length + 1,
+      title: data.title,
+      asal: data.asal,
+      WaktuMasak: data.WaktuMasak
+    };
+    setProducts((prev) => [...prev, newTask]);
+    reset();
+  };
+
+  if (loading) return <p>Memuat data...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+    <main className="page-shell">
+      <section className="intro">
+        <p className="">MASAKAN</p>
+        <h1>Daftar Masakan</h1>
       </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
+      <section className="content-grid">
+        <div className="product-panel">
+          <ul className="product-list">
+            {products.map((p) => (
+              <li className="product-item" key={p.id}>
+                <div>
+                  <span className="product-tag">{p.asal}</span>
+                  <span className="product-title">{p.title}</span>
+                </div>
+                <strong>{p.WaktuMasak} menit</strong>
+              </li>
+            ))}
           </ul>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+
+        <div className="form-panel">
+          <h2>Tambah Masakan</h2>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <label htmlFor="title">Nama Masakan</label>
+            <input id="title" {...register("title")} placeholder="Contoh: Nasi Goreng" />
+            {errors.title && <p className="error-message">{errors.title.message}</p>}
+
+            <label htmlFor="asal">Asal Masakan</label>
+            <input id="asal" {...register("asal")} placeholder="Contoh: Indonesia" />
+            {errors.asal && <p className="error-message">{errors.asal.message}</p>}
+
+            <label htmlFor="WaktuMasak">Waktu Masak (menit)</label>
+            <input id="WaktuMasak" {...register("WaktuMasak", { valueAsNumber: true })} type="number" placeholder="Contoh: 30" />
+            {errors.WaktuMasak && <p className="error-message">{errors.WaktuMasak.message}</p>}
+
+            <button type="submit">+ Tambah Masakan</button>
+          </form>
         </div>
       </section>
+    </main>
+  );
+};
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
-
-export default App
+export default App;
